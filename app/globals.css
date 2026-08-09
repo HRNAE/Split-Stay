@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+}
+
+/* ----------------------------------------------------------------------
+   Signature element: listings render as key-tags — a nod to handing over
+   a physical key/fob when someone moves into a sublet. A small circular
+   punch-hole sits at the top-left, echoing a real luggage or key tag.
+   ---------------------------------------------------------------------- */
+.tag-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid theme("colors.line");
+  border-radius: theme("borderRadius.tag");
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.tag-card:hover {
+  transform: translateY(-2px) rotate(-0.3deg);
+  box-shadow: 0 8px 24px -8px rgb(28 43 57 / 0.25);
+}
+
+.tag-hole {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: theme("colors.paper");
+  border: 1.5px solid theme("colors.line");
+}
+
+.price-fob {
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+}
+
+.btn-primary {
+  background: theme("colors.ink");
+  color: theme("colors.paper");
+  border-radius: 999px;
+  padding: 0.65rem 1.4rem;
+  font-weight: 500;
+  transition: background 150ms ease;
+}
+.btn-primary:hover {
+  background: theme("colors.teal");
+}
+
+.btn-secondary {
+  border: 1.5px solid theme("colors.ink");
+  color: theme("colors.ink");
+  border-radius: 999px;
+  padding: 0.6rem 1.35rem;
+  font-weight: 500;
+  transition: background 150ms ease, color 150ms ease;
+}
+.btn-secondary:hover {
+  background: theme("colors.ink");
+  color: theme("colors.paper");
+}
+
+.input-field {
+  border: 1.5px solid theme("colors.line");
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  background: #fff;
+  width: 100%;
+}
+.input-field:focus {
+  outline: 2px solid theme("colors.brass");
+  outline-offset: 1px;
+}
