@@ -56,8 +56,7 @@ export async function POST(req: Request) {
       break;
     }
 
-    // Wired up in week 2, once bookings + PaymentIntents exist:
-    // confirms a booking as soon as the guest's payment succeeds.
+    // Confirms a booking as soon as the guest's payment succeeds.
     case "payment_intent.succeeded": {
       const intent = event.data.object as Stripe.PaymentIntent;
 
@@ -68,6 +67,26 @@ export async function POST(req: Request) {
 
       if (error) {
         console.error("Failed to confirm booking:", error.message);
+      }
+      break;
+    }
+
+    // A card decline, expired session, or abandoned checkout. We cancel the
+    // pending booking so its date range stops blocking the exclusion
+    // constraint — otherwise a failed payment would permanently squat on
+    // those dates and no one else could book them.
+    case "payment_intent.payment_failed":
+    case "payment_intent.canceled": {
+      const intent = event.data.object as Stripe.PaymentIntent;
+
+      const { error } = await supabase
+        .from("bookings")
+        .update({ status: "cancelled" })
+        .eq("stripe_payment_intent_id", intent.id)
+        .eq("status", "pending"); // never touch an already-confirmed booking
+
+      if (error) {
+        console.error("Failed to release booking hold:", error.message);
       }
       break;
     }

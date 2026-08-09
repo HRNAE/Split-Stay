@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import BookingForm from "@/components/BookingForm";
 
 export default async function ListingDetailPage({
   params,
@@ -8,6 +9,10 @@ export default async function ListingDetailPage({
   params: { id: string };
 }) {
   const supabase = createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: listing } = await supabase
     .from("listings")
@@ -21,6 +26,8 @@ export default async function ListingDetailPage({
     full_name: string | null;
     stripe_onboarding_complete: boolean;
   } | null;
+
+  const isOwnListing = user?.id === listing.host_id;
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-12">
@@ -39,27 +46,35 @@ export default async function ListingDetailPage({
 
       <p className="mb-8 leading-relaxed">{listing.description}</p>
 
-      <div className="tag-card p-6 flex items-center justify-between">
+      <div className="tag-card p-6">
         <div className="tag-hole" />
-        <div>
-          <p className="price-fob text-2xl text-teal font-medium mt-2">
-            ${listing.price_per_night}
-            <span className="text-ink/50 font-normal text-base"> / night</span>
-          </p>
-          <p className="text-sm text-ink/50 mt-1">
-            Hosted by {host?.full_name ?? "a SplitStay host"}
-          </p>
-        </div>
+        <div className="flex items-start justify-between gap-6 flex-wrap mt-2">
+          <div>
+            <p className="price-fob text-2xl text-teal font-medium">
+              ${listing.price_per_night}
+              <span className="text-ink/50 font-normal text-base"> / night</span>
+            </p>
+            <p className="text-sm text-ink/50 mt-1">
+              Hosted by {host?.full_name ?? "a SplitStay host"}
+            </p>
+          </div>
 
-        {host?.stripe_onboarding_complete ? (
-          <button className="btn-primary" disabled title="Booking flow ships in week 2">
-            Book this room
-          </button>
-        ) : (
-          <span className="text-sm text-ink/40 max-w-[160px] text-right">
-            Host is still setting up payouts
-          </span>
-        )}
+          <div className="w-full sm:w-64">
+            {isOwnListing ? (
+              <span className="text-sm text-ink/40">This is your listing</span>
+            ) : host?.stripe_onboarding_complete ? (
+              <BookingForm
+                listingId={listing.id}
+                pricePerNight={listing.price_per_night}
+                isLoggedIn={!!user}
+              />
+            ) : (
+              <span className="text-sm text-ink/40">
+                Host is still setting up payouts
+              </span>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

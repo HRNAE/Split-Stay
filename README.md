@@ -110,16 +110,60 @@ payment collection (Week 2) builds directly on top of what's here.
       redirect → webhook confirms `charges_enabled`)
 - [x] Signature-verified webhook handler
 
-## Week 2 (not yet built)
+## Week 2 checklist
 
-- Booking UI (date range picker) hitting the `bookings` table
-- PaymentIntent with `application_fee_amount` + `transfer_data.destination`
-  (the actual split payment)
-- Webhook-driven booking confirmation on `payment_intent.succeeded`
-  (handler already stubbed in `app/api/stripe/webhook/route.ts`)
-- Host/guest booking dashboard views
-- Known gaps to call out honestly in interviews: no cancellation/refund
-  flow yet, no search/filtering, no reviews
+- [x] Booking UI (date range picker) on the listing page
+- [x] Atomic booking creation via a Postgres RPC (`create_booking`) —
+      the gist exclusion constraint from Week 1 rejects overlapping dates
+      at the database level, and the API route surfaces that as a clean
+      409 instead of a race condition two guests could both "win"
+- [x] Stripe PaymentIntent as a **destination charge**:
+      `application_fee_amount` (platform's cut) stays with SplitStay,
+      the rest transfers to the host's connected account automatically
+- [x] Stripe Elements (`PaymentElement`) checkout UI
+- [x] Webhook-driven booking confirmation on `payment_intent.succeeded`,
+      and automatic cleanup (`payment_intent.payment_failed` /
+      `.canceled` → booking marked `cancelled`, freeing the dates)
+- [x] Dashboard views: "My trips" (guest) and "Bookings on your listings"
+      (host)
+
+### Extra setup for Week 2
+
+1. Run `supabase/week2.sql` in the Supabase SQL Editor (creates the
+   `create_booking` function)
+2. `npm install` again to pick up `@stripe/stripe-js` and
+   `@stripe/react-stripe-js`
+3. If you already created a **production** webhook endpoint in the Stripe
+   Dashboard, add two more events to it: `payment_intent.payment_failed`
+   and `payment_intent.canceled` (locally, `stripe listen` forwards every
+   event by default, so no change needed there)
+
+### Try it end-to-end
+
+1. As one account, list a room and finish Stripe Connect onboarding
+   (Week 1 flow)
+2. Log in as a **different** account (Stripe won't let you pay yourself),
+   open that listing, pick check-in/check-out dates
+3. Click **Continue to payment**, use Stripe's test card `4242 4242 4242
+   4242`, any future expiry, any CVC
+4. Watch your `stripe listen` terminal — you'll see `payment_intent.succeeded`
+   fire, which flips the booking to `confirmed`
+5. Check `/dashboard` on both accounts — the guest sees it under "My
+   trips", the host sees it under "Bookings on your listings"
+6. To test the double-booking guard: open the same listing in two browser
+   tabs (or two accounts) and try to book the same dates in both — the
+   second one gets rejected with "These dates are no longer available"
+
+## Known gaps (Week 3+ / honest interview answers)
+
+- No cancellation/refund flow after a booking is confirmed
+- No search or filtering on the listings grid
+- No reviews/ratings
+- No email notifications on booking confirmation
+- Pending bookings that a guest abandons mid-checkout (never submits
+  payment) will sit as `pending` until Stripe eventually expires the
+  PaymentIntent and fires `payment_intent.canceled` — a background job to
+  expire stale pending bookings proactively would tighten this up
 
 ## Why this project
 
