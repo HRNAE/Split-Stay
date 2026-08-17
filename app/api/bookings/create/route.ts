@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { stripe, PLATFORM_FEE_PERCENT } from "@/lib/stripe";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 
@@ -99,7 +99,8 @@ export async function POST(req: Request) {
   });
 
   // Attach the PaymentIntent id so the webhook can find this booking later
-  const { error: updateError } = await supabase
+  const serviceClient = createServiceRoleClient();
+  const { error: updateError } = await serviceClient
     .from("bookings")
     .update({ stripe_payment_intent_id: paymentIntent.id })
     .eq("id", booking.id);
